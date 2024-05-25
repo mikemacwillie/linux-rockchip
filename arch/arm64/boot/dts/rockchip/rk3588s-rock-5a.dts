@@ -28,7 +28,7 @@
 	fan0: pwm-fan {
 		compatible = "pwm-fan";
 		#cooling-cells = <2>;
-		cooling-levels = <0 64 128 192 255>;
+		cooling-levels = <100 160 190 200 215 235 255>;
 		pwms = <&pwm3 0 10000 0>;
 	};
 
@@ -167,6 +167,10 @@
 			default-state = "on";
 		};
 	};
+};
+
+&av1d_mmu {
+	status = "okay";
 };
 
 &i2c0 {
@@ -410,7 +414,7 @@
 	non-removable;
 	max-frequency = <200000000>;
 	mmc-hs400-1_8v;
-	/delete-property/ mmc-hs400-enhanced-strobe;
+	mmc-hs400-enhanced-strobe;
 	pinctrl-names = "default";
 	pinctrl-0 = <&emmc_rstnout &emmc_bus8 &emmc_clk &emmc_cmd &emmc_data_strobe>;
 	status = "okay";
@@ -673,7 +677,7 @@
 	es8316: es8316@11 {
 		compatible = "everest,es8316";
 		reg = <0x11>;
-		clocks = <&cru I2S0_8CH_MCLKOUT>;
+		clocks = <&mclkout_i2s0>;
 		clock-names = "mclk";
 		pinctrl-names = "default";
 		pinctrl-0 = <&i2s0_mclk>;
@@ -704,18 +708,70 @@
 
 &soc_thermal {
 	sustainable-power = <5000>; /* milliwatts */
+	polling-delay = <1000>;
+	polling-delay-passive = <2000>;
+	trips {
+		trip0: trip-point@0 {
+			temperature = <55000>;
+			hysteresis = <5000>;
+			type = "active";
+		};
+		trip1: trip-point@1 {
+			temperature = <60000>;
+			hysteresis = <5000>;
+			type = "active";
+		};
+		trip2: trip-point@2 {
+			temperature = <65000>;
+			hysteresis = <5000>;
+			type = "active";
+		};
+		trip3: trip-point@3 {
+			temperature = <70000>;
+			hysteresis = <5000>;
+			type = "active";
+		};
+		trip4: trip-point@4 {
+			temperature = <75000>;
+			hysteresis = <5000>;
+			type = "active";
+		};
+		pcritical: trip-point@5 {
+			temperature = <80000>;
+			hysteresis = <1000>;
+			type = "active";
+		};
+	};
 	cooling-maps {
+		map0 {
+			trip = <&trip0>;
+			cooling-device = <&fan0 0 1>;
+			contribution = <1024>;
+		};
+		map1 {
+			trip = <&trip1>;
+			cooling-device = <&fan0 1 2>;
+			contribution = <1024>;
+		};
+		map2 {
+			trip = <&trip2>;
+			cooling-device = <&fan0 2 3>;
+			contribution = <1024>;
+		};
 		map3 {
-			trip = <&target>;
-			cooling-device =
-				<&fan0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
-			contribution = <8192>;
+			trip = <&trip3>;
+			cooling-device = <&fan0 3 4>;
+			contribution = <1024>;
 		};
 		map4 {
-			trip = <&threshold>;
-			cooling-device =
-				<&fan0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
-			contribution = <8192>;
+			trip = <&trip4>;
+			cooling-device = <&fan0 4 5>;
+			contribution = <1024>;
+		};
+		map5 {
+			trip = <&pcritical>;
+			cooling-device = <&fan0 5 6>;
+			contribution = <1024>;
 		};
 	};
 };
@@ -834,6 +890,12 @@
 	dp {
 		dp0_hpd: dp0-hpd {
 			rockchip,pins = <0 RK_PC4 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
+
+	emmc {
+		emmc_data_strobe: emmc-data-strobe {
+			rockchip,pins = <2 RK_PA2 1 &pcfg_pull_down>;
 		};
 	};
 };
